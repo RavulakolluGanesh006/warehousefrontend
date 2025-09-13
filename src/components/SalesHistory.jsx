@@ -2,14 +2,24 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import API from "../api";
 
+// ✅ Get today's date in local timezone format (YYYY-MM-DD)
+const getLocalToday = () => {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, "0");
+  const day = String(today.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
 
 const SalesHistory = ({ channel }) => {
+  const today = getLocalToday(); // ✅ Moved up here
+
   const [sales, setSales] = useState([]);
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [startDate, setStartDate] = useState(today);
+  const [endDate, setEndDate] = useState(today);
 
   useEffect(() => {
-    fetchSales(); // load initially with all sales
+    fetchSales();
   }, []);
 
   const fetchSales = async (start, end) => {
@@ -21,14 +31,13 @@ const SalesHistory = ({ channel }) => {
 
       const res = await axios.get(url);
 
-      // ✅ Group sales by DATE (ignores time)
+      // ✅ Group sales by date
       const grouped = {};
       res.data.forEach((sale) => {
-        const dateKey = new Date(sale.date).toLocaleDateString();
+        const dateKey = new Date(sale.date).toLocaleDateString("en-CA"); // 👈 Safe format
 
         if (!grouped[dateKey]) grouped[dateKey] = {};
 
-        // ✅ Aggregate items by product on the same date
         (sale.items || []).forEach((item) => {
           const productName =
             item.productId?.name || item.productId?.sku || "Unknown Product";
@@ -44,7 +53,6 @@ const SalesHistory = ({ channel }) => {
         });
       });
 
-      // ✅ Convert to array [{date, items:[{name, sku, quantity}]}]
       const formatted = Object.entries(grouped).map(([date, items]) => ({
         date,
         items: Object.entries(items).map(([name, data]) => ({
@@ -64,7 +72,7 @@ const SalesHistory = ({ channel }) => {
     if (startDate && endDate) {
       fetchSales(startDate, endDate);
     } else {
-      fetchSales(); // if empty, fetch all
+      fetchSales();
     }
   };
 
@@ -72,7 +80,6 @@ const SalesHistory = ({ channel }) => {
     <div>
       <h2 className="text-lg font-bold mb-3">{channel} Sales History</h2>
 
-      {/* 🔹 Date Filter */}
       <div className="flex gap-2 mb-4">
         <input
           type="date"
@@ -94,7 +101,6 @@ const SalesHistory = ({ channel }) => {
         </button>
       </div>
 
-      {/* 🔹 Sales Table */}
       <table className="w-full border">
         <thead>
           <tr className="bg-gray-200">
@@ -106,8 +112,8 @@ const SalesHistory = ({ channel }) => {
           {sales.map((sale, idx) => (
             <tr key={idx} className="border">
               <td className="p-2">
-  {new Date(sale.date).toLocaleDateString("en-GB")} 
-</td>
+                {sale.date} {/* Already formatted via locale */}
+              </td>
               <td className="p-2">
                 <ul>
                   {sale.items.map((item, i) => (

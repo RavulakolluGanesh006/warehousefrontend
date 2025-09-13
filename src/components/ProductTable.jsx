@@ -44,6 +44,14 @@ const ProductTable = () => {
       console.error("Error deleting product:", error);
     }
   };
+  const getLocalToday = () => {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, "0");
+  const day = String(today.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
 
   const recordSale = async (id, channel) => {
     const quantity = saleQuantities[id] || 1;
@@ -51,7 +59,7 @@ const ProductTable = () => {
     try {
       await axios.post(`${API}/sales`, {
         channel,
-        date: new Date().toISOString(),
+        date: getLocalToday(),
         items: [{ productId: id, quantity }],
       });
       setSaleQuantities({...saleQuantities, [id]: 1});

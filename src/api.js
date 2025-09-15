@@ -1,3 +1,6 @@
-const API = process.env.REACT_APP_API_BASE_URL || "http://localhost:5000";
+export const API =   "http://localhost:5000/api" || process.env.REACT_APP_API_BASE_URL ;
 
-export default API;
+
+
+// process.env.REACT_APP_API_BASE_URL ||
+

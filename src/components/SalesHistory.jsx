@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import API from "../api";
+import { API } from "../api";
+
 
 // ✅ Get today's date in local timezone format (YYYY-MM-DD)
 const getLocalToday = () => {
@@ -12,7 +13,7 @@ const getLocalToday = () => {
 };
 
 const SalesHistory = ({ channel }) => {
-  const today = getLocalToday(); // ✅ Moved up here
+  const today = getLocalToday();
 
   const [sales, setSales] = useState([]);
   const [startDate, setStartDate] = useState(today);
@@ -31,35 +32,21 @@ const SalesHistory = ({ channel }) => {
 
       const res = await axios.get(url);
 
-      // ✅ Group sales by date
+      // Group sales by date (convert "DD/MM/YYYY" to "YYYY-MM-DD")
       const grouped = {};
+
       res.data.forEach((sale) => {
-        const dateKey = new Date(sale.date).toLocaleDateString("en-CA"); // 👈 Safe format
+        const [day, month, year] = sale.date.split("/");
+        const isoDate = `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
 
-        if (!grouped[dateKey]) grouped[dateKey] = {};
+        if (!grouped[isoDate]) grouped[isoDate] = [];
 
-        (sale.items || []).forEach((item) => {
-          const productName =
-            item.productId?.name || item.productId?.sku || "Unknown Product";
-
-          if (!grouped[dateKey][productName]) {
-            grouped[dateKey][productName] = {
-              sku: item.productId?.sku || "N/A",
-              quantity: 0,
-            };
-          }
-
-          grouped[dateKey][productName].quantity += item.quantity;
-        });
+        grouped[isoDate].push(sale);
       });
 
-      const formatted = Object.entries(grouped).map(([date, items]) => ({
+      const formatted = Object.entries(grouped).map(([date, sales]) => ({
         date,
-        items: Object.entries(items).map(([name, data]) => ({
-          name,
-          sku: data.sku,
-          quantity: data.quantity,
-        })),
+        sales,
       }));
 
       setSales(formatted);
@@ -105,20 +92,18 @@ const SalesHistory = ({ channel }) => {
         <thead>
           <tr className="bg-gray-200">
             <th className="p-2">Date</th>
-            <th className="p-2">Items Sold</th>
+            <th className="p-2">Sales</th>
           </tr>
         </thead>
         <tbody>
-          {sales.map((sale, idx) => (
+          {sales.map((group, idx) => (
             <tr key={idx} className="border">
-              <td className="p-2">
-                {sale.date} {/* Already formatted via locale */}
-              </td>
+              <td className="p-2">{group.date}</td>
               <td className="p-2">
                 <ul>
-                  {sale.items.map((item, i) => (
+                  {group.sales.map((sale, i) => (
                     <li key={i}>
-                      {item.name} (SKU: {item.sku}) — {item.quantity}
+                      SKU: {sale.sku} — Quantity: {sale.quantity}
                     </li>
                   ))}
                 </ul>

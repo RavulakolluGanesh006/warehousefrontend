@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import API from "../api";
+import { API } from "../api";
 
 const ProductTable = () => {
   const [products, setProducts] = useState([]);

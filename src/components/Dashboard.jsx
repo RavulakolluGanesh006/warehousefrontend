@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import SalesHistory from "./SalesHistory";
-
-const API = "http://localhost:5000/api";
+import API from "../api";
 
 const Dashboard = () => {
   const [isDownloading, setIsDownloading] = useState(false);
@@ -21,7 +20,7 @@ const Dashboard = () => {
       }
 
       // 2. Trigger download using the returned file path
-      const downloadUrl = `http://localhost:5000${data.filePath}`;
+      const downloadUrl = `${API}${data.filePath}`;
       const link = document.createElement("a");
       link.href = downloadUrl;
       link.download = "sales_export.xlsx";
